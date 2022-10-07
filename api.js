@@ -4,17 +4,24 @@ const bodyparser = require('body-parser');
 const app = express();
 app.use(bodyparser.json());
 
+// IMPORT ENVIRONMENT VARIABLES/CREDENTIALS
+// -- yes, I know you shouldn't but it's handy during dev!
+require('dotenv').config();
+const dbhost = process.env.DBHOST;
+const dbrootpass = process.env.DBROOTPASS;
+const dbname = process.env.DBNAME;
+
 // DATABASE CONNECTION DETAILS
-var mysqlConnection = mysql.createConnection({
-host: 'localhost',
+var sqlConn = mysql.createConnection({
+host: dbhost,
 user: 'root',
-password: '7MquJK8HrgpWKh',
-database: 'products',
+password: dbrootpass,
+database: dbname,
 multipleStatements: true
 });
 
 // CONNECT TO DATABASE AND OPEN API PORT
-mysqlConnection.connect((err) =>{if(err) throw err; console.log('Ready!');});
+sqlConn.connect((err) =>{if(err) throw err; console.log('Ready!');});
 const port = process.env.PORT || 8080;
 app.listen(port, () => console.log(`API listening on ${port}..`));
 
@@ -44,7 +51,7 @@ const qryProductTypeLabel = 'SELECT * FROM product_type_enforcer;';
 
 // Create GET Router to fetch all items from product table
 app.get('/api/product' , (req, res) => {
-  mysqlConnection.query('SELECT * FROM product_common', (err, rows, fields) => {
+  sqlConn.query('SELECT * FROM product_common', (err, rows, fields) => {
   if (!err)
   res.send(apiResponse(rows));
   else
@@ -57,7 +64,7 @@ app.get('/api/product' , (req, res) => {
 let setProductTypes = [];
 const tblProductTypes = {
   productTypeLabel: function () {
-      mysqlConnection.query(qryProductTypeLabel, (err, rows, fields) => {
+      sqlConn.query(qryProductTypeLabel, (err, rows, fields) => {
         if (!err) 
         Object.keys(rows).forEach(function(key) {
           let row = rows[key];
@@ -66,7 +73,7 @@ const tblProductTypes = {
       });
    },
   productTypeName:function () {
-      mysqlConnection.query(qryProductTypeName, (err, rows, fields) => {
+      sqlConn.query(qryProductTypeName, (err, rows, fields) => {
         if (!err) 
         Object.keys(rows).forEach(function(key) {
           let row = rows[key];
@@ -75,7 +82,7 @@ const tblProductTypes = {
       });
   },  
   productType:function () {
-    mysqlConnection.query(qryProductType, (err, rows, fields) => {
+    sqlConn.query(qryProductType, (err, rows, fields) => {
       if (!err) 
       Object.keys(rows).forEach(function(key) {
         let row = rows[key];
@@ -95,7 +102,7 @@ app.get('/api/product-types2' , (req, res) => {
 // WORKING
 
 app.get('/api/product-types' , (req, res) => {  
-    mysqlConnection.query(qryProductType, (err, rows, fields) => {
+    sqlConn.query(qryProductType, (err, rows, fields) => {
       let tblProductType = [];
       if (!err) 
       Object.keys(rows).forEach(function(key) {
@@ -113,7 +120,7 @@ app.get('/api/product-types' , (req, res) => {
 app.get('/api/product-types/:product_type',(req, res) => {
 let productType = req.params.product_type;
 let sqlQuery = `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = 'products' AND TABLE_NAME = '`+productType+`' AND REFERENCED_COLUMN_NAME = 'id' AND NOT REFERENCED_TABLE_NAME = 'product_common';`;
-let query = mysqlConnection.query(sqlQuery, (err, result) => {
+let query = sqlConn.query(sqlQuery, (err, result) => {
     if (err) throw err;
     Object.keys(result).forEach(function(key) {
     let row = result[key];
@@ -126,7 +133,7 @@ let query = mysqlConnection.query(sqlQuery, (err, result) => {
 
 // Create GET Router to fetch all items from product table
 app.get('/api/product' , (req, res) => {
-mysqlConnection.query('SELECT * FROM product', (err, rows, fields) => {
+sqlConn.query('SELECT * FROM product', (err, rows, fields) => {
 if (!err)
 res.send(rows);
 else
@@ -150,7 +157,7 @@ app.get('/api/product/thin-client',(req, res) => {
     LEFT JOIN attr_ssd_storage ON thin_client.attr_ssd_storage_id=attr_ssd_storage.id
     LEFT JOIN attr_thin_client_software ON thin_client.attr_thin_client_software_id=attr_thin_client_software.id;
   `
-mysqlConnection.query(listProductQuery, (err, rows, fields) => {
+sqlConn.query(listProductQuery, (err, rows, fields) => {
 if (!err)
 res.send(apiResponse(results));
 else
@@ -178,7 +185,7 @@ console.log(err);
       LEFT JOIN attr_ssd_storage ON thin_client.attr_ssd_storage_id=attr_ssd_storage.id
       LEFT JOIN attr_thin_client_software ON thin_client.attr_thin_client_software_id=attr_thin_client_software.id
       WHERE product_common.sku='`+req.params.sku+"';";
-    let query = mysqlConnection.query(sqlQuery, (err, results) => {
+    let query = sqlConn.query(sqlQuery, (err, results) => {
       if(err) throw err;
       res.send(apiResponse(results));
     });
@@ -191,7 +198,7 @@ console.log(err);
  */
 app.delete('/api/product/thin-client/:sku',(req, res) => {
   let sqlQuery = "DELETE thin_client FROM thin_client RIGHT JOIN product_common ON thin_client.product_id=product_common.id WHERE product_common.sku='"+req.params.sku+"'; DELETE product_common FROM product_common WHERE product_common.sku='"+req.params.sku+"';";
-  let query = mysqlConnection.query(sqlQuery, (err, results) => {
+  let query = sqlConn.query(sqlQuery, (err, results) => {
     if(err) throw err;
       res.send(apiResponse(results));
   });
