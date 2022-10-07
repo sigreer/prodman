@@ -61,7 +61,7 @@ const qryProductTypeLabel = 'SELECT * FROM product_type_enforcer;';
  */
 
 // Create GET Router to fetch all items from product table
-app.get('/api/product' , (req, res) => {
+app.get('/api/products' , (req, res) => {
   sqlConn.query('SELECT * FROM product_common', (err, rows, fields) => {
   if (!err)
   res.send(apiResponse(rows));
@@ -71,46 +71,31 @@ app.get('/api/product' , (req, res) => {
   });
 
 
-// Function - List product types
-let setProductTypes = [];
-const tblProductTypes = {
-  productTypeLabel: function () {
-      sqlConn.query(qryProductTypeLabel, (err, rows, fields) => {
-        if (!err) 
-        Object.keys(rows).forEach(function(key) {
-          let row = rows[key];
-          setProductTypes.push(row.product_type_label);
-        });
-      });
-   },
-  productTypeName:function () {
-      sqlConn.query(qryProductTypeName, (err, rows, fields) => {
-        if (!err) 
-        Object.keys(rows).forEach(function(key) {
-          let row = rows[key];
-          setProductTypes.push(row.product_type_name);
-        });
-      });
-  },  
-  productType:function () {
-    sqlConn.query(qryProductType, (err, rows, fields) => {
-      if (!err) 
-      Object.keys(rows).forEach(function(key) {
-        let row = rows[key];
-        setProductTypes.push(row.product_type);
-      });
+app.get('/api/product-types/:product_type/attributes', (req, res) => 
+  {
+    sqlConn.query('SELECT product_type, product_type_name FROM product_type_enforcer WHERE product_type_name = \''+req.params.product_type+'\';', (err, rows, fields) => {
+      if (!err)
+      res.send(apiResponse(rows[0].product_type));
+      else
+      console.log(err);
     });
   }
-};
+);
 
-app.get('/api/product-types2' , (req, res) => {  
-  res.send(apiResponse(tblProductTypes.productTypeName(setProductTypes[0])));  
-  });
+// /////////////IWASHERE
+sqlConn.query('SELECT product_type FROM product_type_enforcer WHERE product_type_name = \'thin_client\';', (err, rows, fields) => {
+      if (!err)
+      Object.keys(rows).forEach(function(key) {
+        let row = rows[key];
+        tblProductType.push(row);
+      })
+      else console.log('err');
+      console.log(tblProductType[0])
+});
 
 
 
-
-// WORKING
+      // WORKING
 
 app.get('/api/product-types' , (req, res) => {  
     sqlConn.query(qryProductType, (err, rows, fields) => {
