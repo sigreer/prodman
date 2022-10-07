@@ -4,6 +4,17 @@ const bodyparser = require('body-parser');
 const app = express();
 app.use(bodyparser.json());
 
+// Login ASCII Art
+const loginart = `
+_____               _                       
+|  __ \\             | |                      
+| |__) | __ ___   __| |_ __ ___   __ _ _ __  
+|  ___/ \'__/ _ \\ / _\` | \'_ \` _ \\ / _\` \| \'_ \\ 
+| |   | | | (_) | (_| | | | | | | (_| | | | |
+|_|   |_|  \\___/ \\__,_|_| |_| |_|\\__,_|_| |_|
+                                             
+                                             `
+
 // IMPORT ENVIRONMENT VARIABLES/CREDENTIALS
 // -- yes, I know you shouldn't but it's handy during dev!
 require('dotenv').config();
@@ -21,9 +32,9 @@ multipleStatements: true
 });
 
 // CONNECT TO DATABASE AND OPEN API PORT
-sqlConn.connect((err) =>{if(err) throw err; console.log('Ready!');});
+sqlConn.connect((err) =>{if(err) throw err; console.log(loginart); console.log('READY!');});
 const port = process.env.PORT || 8080;
-app.listen(port, () => console.log(`API listening on ${port}..`));
+app.listen(port, () => console.log(`Frontend listening on port  ${port}`));
 
 // VARIABLES
 let productType;
@@ -219,5 +230,6 @@ Server listening
 --------------------------------------------
 --------------------------------------------*/
 app.listen(3000,() =>{
-  console.log('Server started on port 3000...');
+  console.log('API Listening on port       3000');
+
 });
